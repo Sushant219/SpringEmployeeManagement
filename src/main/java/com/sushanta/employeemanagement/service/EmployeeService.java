@@ -38,7 +38,8 @@ public class EmployeeService {
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
                 employee.getAge(),
-                employee.getDepartment()
+                employee.getDepartment(),
+                employee.getSalary()
         );
         return employeeResponseDTO;
     }
@@ -55,12 +56,32 @@ public class EmployeeService {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
                     employee.getAge(),
-                    employee.getDepartment()
+                    employee.getDepartment(),
+                    employee.getSalary()
             );
             // Adding Each DTO Inside Our ArrayList.
             employeeResponseDTOS.add(employeeResponseDTO);
         }
         // Returning Our Employee DTOS That Are Stored Inside Our ArrayList.
+        return employeeResponseDTOS;
+    }
+
+    // Get Employee By Department
+    public List<EmployeeResponseDTO> findByDepartment(String department) {
+
+        List<Employee> employeeList = repository.findByDepartment(department);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+
+        for (Employee employee : employeeList) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
+        }
         return employeeResponseDTOS;
     }
 
@@ -77,7 +98,8 @@ public class EmployeeService {
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
                 employee.getAge(),
-                employee.getDepartment()
+                employee.getDepartment(),
+                employee.getSalary()
         );
 
         return employeeResponseDTO;
@@ -100,7 +122,8 @@ public class EmployeeService {
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
                 employee.getAge(),
-                employee.getDepartment()
+                employee.getDepartment(),
+                employee.getSalary()
         );
         return employeeResponseDTO;
     }
@@ -115,5 +138,133 @@ public class EmployeeService {
         repository.delete(employee);
         return "Employee ID: " + id + " Name: " + employee.getName() + " has been deleted";
 
+    }
+
+    // Employee By Age
+    public List<EmployeeResponseDTO> getEmployeeByAge(int age) {
+        List<Employee> employeeList = repository.findByAge(age);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+
+        for (Employee employee : employeeList) {
+            if (employee.getAge() >= age) {
+                EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                );
+                employeeResponseDTOS.add(employeeResponseDTO);
+            }
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee By Salary
+    public List<EmployeeResponseDTO> getEmployeeBySalary(float salary) {
+
+        List<Employee> employeeList = repository.findBySalary(salary);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+        for (Employee employee : employeeList) {
+            if (employee.getSalary() >= salary) {
+                EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                );
+                employeeResponseDTOS.add(employeeResponseDTO);
+            }
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee By Department And Age
+    public List<EmployeeResponseDTO> getEmployeeByDepartmentAndAge (String department, int age) {
+        List<Employee> employees = repository.findByDepartmentAndAgeGreaterThanEqual(department, age);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+
+        for (Employee employee : employees) {
+                EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                );
+                employeeResponseDTOS.add(employeeResponseDTO);
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee Name Contains.
+    public List<EmployeeResponseDTO> getEmployeeByNameContains(String name) {
+        List<Employee> employees = repository.findByNameContainingIgnoreCase(name);
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+        for (Employee employee : employees) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee Salary Is Greater Than.
+
+    public List<EmployeeResponseDTO> getEmployeeBySalaryGreaterThan(float salary) {
+        List<Employee> employees = repository.findBySalaryGreaterThan(salary);
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+        for (Employee employee : employees) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee Age Is Between.
+    public List<EmployeeResponseDTO> getEmployeeBySalaryBetween(float minSalary,float maxSalary) {
+        List<Employee> employees = repository.findBySalaryBetween(minSalary, maxSalary);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+
+        for (Employee employee : employees) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
+        }
+        return employeeResponseDTOS;
+    }
+
+    // Employee Department And Salary LessThan.
+    public List<EmployeeResponseDTO> getEmployeeByDepartmentSortBySalaryDesc(String department) {
+
+        List<Employee> employees = repository.findByDepartmentOrderBySalaryDesc(department);
+
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+
+        for (Employee employee : employees) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
+        }
+        return employeeResponseDTOS;
     }
 }

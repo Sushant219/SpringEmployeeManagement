@@ -14,4 +14,5 @@ public class EmployeeResponseDTO {
     private String name;
     private int age;
     private String department;
+    private float salary;
 }
