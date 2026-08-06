@@ -5,6 +5,7 @@ import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
 import com.sushanta.employeemanagement.service.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -105,6 +106,27 @@ public class EmployeeController {
     @GetMapping("/department/{department}/sort/salary/desc")
     public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeByDepartmentAndSalary(@PathVariable String department){
         List<EmployeeResponseDTO> response = employeeService.getEmployeeByDepartmentSortBySalaryDesc(department);
+        return ResponseEntity.ok().body(response);
+    }
+
+    // Paginated Employee
+    @GetMapping("/page")
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByPage(@RequestParam int page, @RequestParam int size){
+        Page<EmployeeResponseDTO> response = employeeService.getEmployeeByPage(page,size);
+        return ResponseEntity.ok().body(response);
+    }
+
+    // Paginated Employee By Sort
+    @GetMapping("/page/sort")
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByPageAndSort(@RequestParam int page, @RequestParam int size, @RequestParam String sort, @RequestParam String direction){
+        Page<EmployeeResponseDTO> response = employeeService.getEmployeeByPageSortBySalary(page,size,sort,direction);
+        return ResponseEntity.ok().body(response);
+    }
+
+    // Paginated Employee Sort By Age
+    @GetMapping("/page/sort/age/{age}")
+    public ResponseEntity<Page<EmployeeResponseDTO>>getPaginatedEmployeeByAgeAndSalary(@PathVariable int age, @RequestParam int page, @RequestParam int size,@RequestParam String sort, @RequestParam String direction){
+        Page<EmployeeResponseDTO> response = employeeService.getPaginatedEmployeeByAgeAndSalary(age,page,size,sort,direction);
         return ResponseEntity.ok().body(response);
     }
 

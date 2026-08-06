@@ -1,6 +1,8 @@
 package com.sushanta.employeemanagement.repository;
 
 import com.sushanta.employeemanagement.entity.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -31,5 +33,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     // Employee Department And Salary LessThan
     List<Employee> findByDepartmentOrderBySalaryDesc(String department);
+
+    // Paginated Employee By Age
+    Page<Employee> findByAge(int age, Pageable pageable);
 
 }

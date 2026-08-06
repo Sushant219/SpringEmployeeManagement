@@ -6,6 +6,7 @@ import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
 import com.sushanta.employeemanagement.entity.Employee;
 import com.sushanta.employeemanagement.exception.EmployeeNotFoundException;
 import com.sushanta.employeemanagement.repository.EmployeeRepository;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -215,7 +216,6 @@ public class EmployeeService {
     }
 
     // Employee Salary Is Greater Than.
-
     public List<EmployeeResponseDTO> getEmployeeBySalaryGreaterThan(float salary) {
         List<Employee> employees = repository.findBySalaryGreaterThan(salary);
         List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
@@ -265,6 +265,54 @@ public class EmployeeService {
             );
             employeeResponseDTOS.add(employeeResponseDTO);
         }
+        return employeeResponseDTOS;
+    }
+
+    // Paginated Employee
+    public Page<EmployeeResponseDTO> getEmployeeByPage(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Employee> employees = repository.findAll(pageable);
+
+        Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
+                employee.getName(),
+                employee.getAge(),
+                employee.getDepartment(),
+                employee.getSalary()
+        ));
+        return employeeResponseDTOS;
+    }
+
+    // Paginated Employee By Sort
+
+    public Page<EmployeeResponseDTO> getEmployeeByPageSortBySalary(int page, int size, String sort, String direction) {
+
+        Pageable pageable = PageRequest.of(page,size,
+                Sort.by(Sort.Direction.valueOf(direction.toUpperCase()),sort));
+
+        Page<Employee> employees = repository.findAll(pageable);
+
+        Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
+           employee.getName(),
+           employee.getAge(),
+           employee.getDepartment(),
+           employee.getSalary()
+        ));
+
+        return employeeResponseDTOS;
+    }
+
+    // Paginated Employee By Age
+    public Page<EmployeeResponseDTO> getPaginatedEmployeeByAgeAndSalary(int age, int page, int size, String sort, String direction) {
+        Pageable pageable = PageRequest.of(page,size,Sort.by(Sort.Direction.valueOf(direction.toUpperCase()),sort));
+
+        Page<Employee> employees = repository.findByAge(age,pageable);
+
+        Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
+                employee.getName(),
+                employee.getAge(),
+                employee.getDepartment(),
+                employee.getSalary()
+        ));
         return employeeResponseDTOS;
     }
 }
