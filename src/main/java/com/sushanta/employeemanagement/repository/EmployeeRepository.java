@@ -4,6 +4,8 @@ import com.sushanta.employeemanagement.entity.Employee;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,30 +13,55 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
+    //-----------------
+    // Validation
+    //-----------------
 
-    // Spring Data JPA Custom Method For Department
+    boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, Integer id);
+
+
+    // ===========================
+// FILTERS
+// ===========================
+
     List<Employee> findByDepartment(String department);
 
-    // Spring Data JPA Custom Method For Age.
     List<Employee> findByAge(int age);
 
     List<Employee> findBySalary(float salary);
 
-    List<Employee> findByDepartmentAndAgeGreaterThanEqual(String department, int age);
 
-    // Employee Name Contains
+    @Query("SELECT e FROM Employee e WHERE e.department =:department AND e.age >= :age")
+    List<Employee> findByDepartmentAndAgeGreaterThanEqual(@Param("department") String department, @Param("age") int age);
+
     List<Employee> findByNameContainingIgnoreCase(String name);
 
-    // Employee Salary Is Greater Than
-    List<Employee> findBySalaryGreaterThan(float salary);
 
-    // Employee Age Is Between
-    List<Employee> findBySalaryBetween(float minSalary, float maxSalary);
+    @Query("SELECT e FROM Employee e WHERE e.salary > :salary ")
+    List<Employee> findBySalaryGreaterThan(@Param("salary") float salary);
 
-    // Employee Department And Salary LessThan
-    List<Employee> findByDepartmentOrderBySalaryDesc(String department);
+    List<Employee> findBySalaryBetween(
+            float minSalary,
+            float maxSalary
+    );
 
-    // Paginated Employee By Age
-    Page<Employee> findByAge(int age, Pageable pageable);
+    List<Employee> findByDepartmentOrderBySalaryDesc(
+            String department
+    );
 
+// ===========================
+// PAGINATION
+// ===========================
+
+    Page<Employee> findByAge(
+            int age,
+            Pageable pageable
+    );
+
+    Page<Employee> findByDepartment(
+            String department,
+            Pageable pageable
+    );
 }

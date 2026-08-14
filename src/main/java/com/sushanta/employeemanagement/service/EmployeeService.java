@@ -4,9 +4,14 @@ package com.sushanta.employeemanagement.service;
 import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
 import com.sushanta.employeemanagement.entity.Employee;
+import com.sushanta.employeemanagement.exception.DuplicateEmailException;
 import com.sushanta.employeemanagement.exception.EmployeeNotFoundException;
+import com.sushanta.employeemanagement.exception.InvalidDepartmentException;
 import com.sushanta.employeemanagement.repository.EmployeeRepository;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,12 +23,24 @@ public class EmployeeService {
 
     // Dependency Creation
     EmployeeRepository repository;
+
     public EmployeeService(EmployeeRepository repository) {
         this.repository = repository;
     }
 
     // Add Employee
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO employeeRequestDTO) {
+
+        List<String> departments = List.of(
+                "IT",
+                "HR",
+                "Production",
+                "Finance",
+                "Marketing"
+        );
+
+        boolean validDepartment = false;
+
         // DTO -> Entity
         Employee employee = new Employee(
                 employeeRequestDTO.getName(),
@@ -33,7 +50,25 @@ public class EmployeeService {
                 employeeRequestDTO.getSalary()
         );
 
+        // Validating Email
+        if (repository.existsByEmail(employee.getEmail())) {
+            throw new DuplicateEmailException("Employee with " + employee.getEmail() + " already exists.");
+        }
+        // Validating The Department.
+        for (String department : departments) {
+            if (department.equals(employee.getDepartment())) {
+                validDepartment = true;
+                break;
+            }
+        }
+
+        if (!validDepartment) {
+            throw new InvalidDepartmentException("Department does not exist.");
+        }
+
+        // Save The Employee After Cheacking.
         repository.save(employee);
+
 
         // Entity -> DTO
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
@@ -46,7 +81,7 @@ public class EmployeeService {
     }
 
     // Get Employee
-    public List<EmployeeResponseDTO> getEmployee (){
+    public List<EmployeeResponseDTO> getEmployee() {
 
         // Getting All The List Of Employee Records.
         List<Employee> employees = repository.findAll();
@@ -114,12 +149,25 @@ public class EmployeeService {
         if (optionalEmployee.isEmpty()) {
             throw new EmployeeNotFoundException("Employee " + id + " Is Not Found");
         }
+
+
         Employee employee = optionalEmployee.get();
+
+        if (repository.existsByEmailAndIdNot(employee.getEmail(), id)) {
+            throw new DuplicateEmailException("This Email: " + employee.getEmail() + " belongs to other employee.");
+        }
+
+
         employee.setName(employeeRequestDTO.getName());
+        employee.setEmail(employeeRequestDTO.getEmail());
         employee.setAge(employeeRequestDTO.getAge());
         employee.setDepartment(employeeRequestDTO.getDepartment());
         employee.setSalary(employeeRequestDTO.getSalary());
+
+
         repository.save(employee);
+
+
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
                 employee.getAge(),
@@ -182,19 +230,19 @@ public class EmployeeService {
     }
 
     // Employee By Department And Age
-    public List<EmployeeResponseDTO> getEmployeeByDepartmentAndAge (String department, int age) {
+    public List<EmployeeResponseDTO> getEmployeeByDepartmentAndAge(String department, int age) {
         List<Employee> employees = repository.findByDepartmentAndAgeGreaterThanEqual(department, age);
 
         List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
 
         for (Employee employee : employees) {
-                EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
-                        employee.getName(),
-                        employee.getAge(),
-                        employee.getDepartment(),
-                        employee.getSalary()
-                );
-                employeeResponseDTOS.add(employeeResponseDTO);
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
         }
         return employeeResponseDTOS;
     }
@@ -232,7 +280,7 @@ public class EmployeeService {
     }
 
     // Employee Age Is Between.
-    public List<EmployeeResponseDTO> getEmployeeBySalaryBetween(float minSalary,float maxSalary) {
+    public List<EmployeeResponseDTO> getEmployeeBySalaryBetween(float minSalary, float maxSalary) {
         List<Employee> employees = repository.findBySalaryBetween(minSalary, maxSalary);
 
         List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
@@ -282,37 +330,81 @@ public class EmployeeService {
         return employeeResponseDTOS;
     }
 
-    // Paginated Employee By Sort
+    // Paginated Employees + Sorting
+    public Page<EmployeeResponseDTO> getEmployeesByPageAndSort(
+            int page,
+            int size,
+            String sort,
+            String direction) {
 
-    public Page<EmployeeResponseDTO> getEmployeeByPageSortBySalary(int page, int size, String sort, String direction) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.valueOf(direction.toUpperCase()),
+                        sort
+                )
+        );
 
-        Pageable pageable = PageRequest.of(page,size,
-                Sort.by(Sort.Direction.valueOf(direction.toUpperCase()),sort));
 
-        Page<Employee> employees = repository.findAll(pageable);
-
-        Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
-           employee.getName(),
-           employee.getAge(),
-           employee.getDepartment(),
-           employee.getSalary()
-        ));
-
-        return employeeResponseDTOS;
+        return repository.findAll(pageable)
+                .map(employee -> new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                ));
     }
 
-    // Paginated Employee By Age
-    public Page<EmployeeResponseDTO> getPaginatedEmployeeByAgeAndSalary(int age, int page, int size, String sort, String direction) {
-        Pageable pageable = PageRequest.of(page,size,Sort.by(Sort.Direction.valueOf(direction.toUpperCase()),sort));
+    // Age + Pagination + Sorting
+    public Page<EmployeeResponseDTO> getEmployeesByAgeWithPagination(
+            int age,
+            int page,
+            int size,
+            String sort,
+            String direction) {
 
-        Page<Employee> employees = repository.findByAge(age,pageable);
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.valueOf(direction.toUpperCase()),
+                        sort
+                )
+        );
 
-        Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
-                employee.getName(),
-                employee.getAge(),
-                employee.getDepartment(),
-                employee.getSalary()
-        ));
-        return employeeResponseDTOS;
+        return repository.findByAge(age, pageable)
+                .map(employee -> new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                ));
+    }
+
+    // Department + Pagination + Sorting
+    public Page<EmployeeResponseDTO> getEmployeesByDepartmentWithPagination(
+            String department,
+            int page,
+            int size,
+            String sort,
+            String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.valueOf(direction.toUpperCase()),
+                        sort
+                )
+        );
+
+        return repository.findByDepartment(department, pageable)
+                .map(employee -> new EmployeeResponseDTO(
+                        employee.getName(),
+                        employee.getAge(),
+                        employee.getDepartment(),
+                        employee.getSalary()
+                ));
     }
 }

@@ -12,122 +12,195 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController()
+@RestController
 @RequestMapping("/employee")
 public class EmployeeController {
 
-    // Dependency Creation
     private final EmployeeService employeeService;
-    public EmployeeController(EmployeeService employeeService) {
 
+    public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
     }
 
-    // Add Employee
+    // ===========================
+    // CRUD
+    // ===========================
+
     @PostMapping
-    public ResponseEntity<EmployeeResponseDTO> createEmployee(@Valid @RequestBody EmployeeRequestDTO employeeRequestDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(employeeRequestDTO));
+    public ResponseEntity<EmployeeResponseDTO> createEmployee(
+            @Valid @RequestBody EmployeeRequestDTO request) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(employeeService.createEmployee(request));
     }
 
-    // Get Employee
     @GetMapping
     public ResponseEntity<List<EmployeeResponseDTO>> getAllEmployees() {
-        return ResponseEntity.ok().body(employeeService.getEmployee());
+        return ResponseEntity.ok(employeeService.getEmployee());
     }
 
-    // Employee By Department
-    @GetMapping("/department/{department}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getAllEmployeesByDepartment(@PathVariable String department) {
-        return ResponseEntity.ok().body(employeeService.findByDepartment(department));
-    }
-
-    // Get Employee By ID
     @GetMapping("/{id}")
-    public EmployeeResponseDTO getEmployee(@PathVariable int id) {
-       return employeeService.getEmployeeById(id);
+    public ResponseEntity<EmployeeResponseDTO> getEmployeeById(@PathVariable int id) {
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
-    // Update Employee By ID
     @PutMapping("/{id}")
-    public ResponseEntity<EmployeeResponseDTO> updateEmployee(@Valid @PathVariable int id, @RequestBody EmployeeRequestDTO employeeRequestDTO) {
-        EmployeeResponseDTO response = employeeService.updateEmployeeById(id, employeeRequestDTO);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<EmployeeResponseDTO> updateEmployee(
+            @PathVariable int id,
+            @Valid @RequestBody EmployeeRequestDTO request) {
+
+        return ResponseEntity.ok(employeeService.updateEmployeeById(id, request));
     }
 
-    // Delete Employee
     @DeleteMapping("/{id}")
-    public String deleteEmployee(@PathVariable int id) {
-        return employeeService.deleteEmployeeById(id);
+    public ResponseEntity<String> deleteEmployee(@PathVariable int id) {
+        return ResponseEntity.ok(employeeService.deleteEmployeeById(id));
     }
 
-    // Employee By Salary
-    @GetMapping("/salary/{salary}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getAllEmployeesBySalary(@PathVariable float salary) {
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeBySalary(salary);
-        return ResponseEntity.ok().body(response);
+    // ===========================
+    // FILTERS
+    // ===========================
+
+    @GetMapping("/department/{department}")
+    public ResponseEntity<List<EmployeeResponseDTO>> getByDepartment(
+            @PathVariable String department) {
+
+        return ResponseEntity.ok(employeeService.findByDepartment(department));
     }
 
-    // Employee By Age
     @GetMapping("/age/{age}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeByAge (@PathVariable int age){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeByAge(age);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<List<EmployeeResponseDTO>> getByAge(
+            @PathVariable int age) {
+
+        return ResponseEntity.ok(employeeService.getEmployeeByAge(age));
     }
 
-    // Employee By Dept. And Age
-    @GetMapping("/department/{department}/age/{age}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeByDepartmentAndAge(@PathVariable String department, @PathVariable int age){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeByDepartmentAndAge(department, age);
-        return ResponseEntity.ok().body(response);
+    @GetMapping("/salary/{salary}")
+    public ResponseEntity<List<EmployeeResponseDTO>> getBySalary(
+            @PathVariable float salary) {
+
+        return ResponseEntity.ok(employeeService.getEmployeeBySalary(salary));
     }
 
-    // Employee By Name Contains
-    @GetMapping("/name/{name}")
-        public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeByNameContains(@PathVariable String name){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeByNameContains(name);
-        return ResponseEntity.ok().body(response);
-        }
-
-    // Employee By Salary Is Greater Than
     @GetMapping("/salary/greater-than/{salary}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeBySalaryGreaterThan(@PathVariable float salary){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeBySalaryGreaterThan(salary);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<List<EmployeeResponseDTO>> getSalaryGreaterThan(
+            @PathVariable float salary) {
+
+        return ResponseEntity.ok(employeeService.getEmployeeBySalaryGreaterThan(salary));
     }
 
-    // Employee By Salary Between
     @GetMapping("/salary/between/{minSalary}/{maxSalary}")
-    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeBySalaryBetween(@PathVariable float minSalary,@PathVariable float maxSalary){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeBySalaryBetween(minSalary,maxSalary);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<List<EmployeeResponseDTO>> getSalaryBetween(
+            @PathVariable float minSalary,
+            @PathVariable float maxSalary) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeeBySalaryBetween(minSalary, maxSalary));
     }
 
-    // Employee By Salary LessThan
-    @GetMapping("/department/{department}/sort/salary/desc")
-    public ResponseEntity<List<EmployeeResponseDTO>> getEmployeeByDepartmentAndSalary(@PathVariable String department){
-        List<EmployeeResponseDTO> response = employeeService.getEmployeeByDepartmentSortBySalaryDesc(department);
-        return ResponseEntity.ok().body(response);
+    @GetMapping("/department/{department}/age/{age}")
+    public ResponseEntity<List<EmployeeResponseDTO>> getDepartmentAndAge(
+            @PathVariable String department,
+            @PathVariable int age) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeeByDepartmentAndAge(department, age));
     }
 
-    // Paginated Employee
+    @GetMapping("/search/name/{name}")
+    public ResponseEntity<List<EmployeeResponseDTO>> searchByName(
+            @PathVariable String name) {
+
+        return ResponseEntity.ok(employeeService.getEmployeeByNameContains(name));
+    }
+
+    @GetMapping("/department/{department}/salary/desc")
+    public ResponseEntity<List<EmployeeResponseDTO>> getDepartmentOrderBySalaryDesc(
+            @PathVariable String department) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeeByDepartmentSortBySalaryDesc(department));
+    }
+
+    // ===========================
+    // PAGINATION
+    // ===========================
+
     @GetMapping("/page")
-    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByPage(@RequestParam int page, @RequestParam int size){
-        Page<EmployeeResponseDTO> response = employeeService.getEmployeeByPage(page,size);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeesByPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeeByPage(page, size));
     }
 
-    // Paginated Employee By Sort
+    // ===========================
+    // PAGINATION + SORTING
+    // ===========================
+
     @GetMapping("/page/sort")
-    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByPageAndSort(@RequestParam int page, @RequestParam int size, @RequestParam String sort, @RequestParam String direction){
-        Page<EmployeeResponseDTO> response = employeeService.getEmployeeByPageSortBySalary(page,size,sort,direction);
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeesByPageAndSort(
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "5") int size,
+
+            @RequestParam(defaultValue = "id") String sort,
+
+            @RequestParam(defaultValue = "ASC") String direction) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeesByPageAndSort(page, size, sort, direction));
     }
 
-    // Paginated Employee Sort By Age
-    @GetMapping("/page/sort/age/{age}")
-    public ResponseEntity<Page<EmployeeResponseDTO>>getPaginatedEmployeeByAgeAndSalary(@PathVariable int age, @RequestParam int page, @RequestParam int size,@RequestParam String sort, @RequestParam String direction){
-        Page<EmployeeResponseDTO> response = employeeService.getPaginatedEmployeeByAgeAndSalary(age,page,size,sort,direction);
-        return ResponseEntity.ok().body(response);
+    // ===========================
+    // FILTER + PAGINATION + SORTING
+    // ===========================
+
+    @GetMapping("/department/{department}/page")
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeesByDepartment(
+
+            @PathVariable String department,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "5") int size,
+
+            @RequestParam(defaultValue = "id") String sort,
+
+            @RequestParam(defaultValue = "ASC") String direction) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeesByDepartmentWithPagination(
+                        department,
+                        page,
+                        size,
+                        sort,
+                        direction
+                )
+        );
     }
 
+    @GetMapping("/age/{age}/page")
+    public ResponseEntity<Page<EmployeeResponseDTO>> getAgeEmployees(
+
+            @PathVariable int age,
+
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "5") int size,
+
+            @RequestParam(defaultValue = "id") String sort,
+
+            @RequestParam(defaultValue = "ASC") String direction) {
+
+        return ResponseEntity.ok(
+                employeeService.getEmployeesByAgeWithPagination(
+                        age,
+                        page,
+                        size,
+                        sort,
+                        direction));
+    }
 }

@@ -22,4 +22,26 @@ public class GlobalExceptionHandler {
     }
 
 
+    // Duplicate Email Validation
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateEmailException(DuplicateEmailException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                409,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    // Invalid Department
+
+    @ExceptionHandler(InvalidDepartmentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDepartmentException(InvalidDepartmentException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                400,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 }
