@@ -1,6 +1,7 @@
 package com.sushanta.employeemanagement.service;
 
 
+import com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO;
 import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
 import com.sushanta.employeemanagement.entity.Employee;
@@ -121,6 +122,10 @@ public class EmployeeService {
         return employeeResponseDTOS;
     }
 
+    public List<DepartmentAvarageSalaryDTO> getEmployeeDepartmentAvarageSalary() {
+        return repository.findAvarageSalaryByDepartment();
+    }
+
     // Get Employee By ID
     public EmployeeResponseDTO getEmployeeById(int id) {
         Optional<Employee> optionalEmployee = repository.findById(id);
@@ -225,6 +230,23 @@ public class EmployeeService {
                 );
                 employeeResponseDTOS.add(employeeResponseDTO);
             }
+        }
+        return employeeResponseDTOS;
+    }
+
+
+    // Employee From DepartmentA Or DepartmentB
+    public List<EmployeeResponseDTO> employeeFromDepartmentAOrDepartmentB(String departmentA, String departmentB) {
+        List<Employee> employeeList = repository.findByDepartmentAOrDepartmentB(departmentA, departmentB);
+        List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
+        for (Employee employee : employeeList) {
+            EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
+                    employee.getName(),
+                    employee.getAge(),
+                    employee.getDepartment(),
+                    employee.getSalary()
+            );
+            employeeResponseDTOS.add(employeeResponseDTO);
         }
         return employeeResponseDTOS;
     }
@@ -407,4 +429,29 @@ public class EmployeeService {
                         employee.getSalary()
                 ));
     }
+    // Get Employee Where Salary Is Greater Than Given Salary
+    public Page<EmployeeResponseDTO> getEmployeesBySalaryGreaterThan(float minSalary, int page, int size) {
+
+        Pageable pageable1 = PageRequest.of(page, size);
+        return repository.findBySalaryGreaterThan(minSalary, pageable1)
+                .map(employee -> new EmployeeResponseDTO(
+                   employee.getName(),
+                   employee.getAge(),
+                   employee.getDepartment(),
+                   employee.getSalary()
+                ));
+    }
+
+    // Get Employee By Department,salary,age,page and size
+    public Page<EmployeeResponseDTO> getEmployeeByDepartmentSalaryAndAge(String department,float minSalary, int age, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return repository.findByDepartmentSalaryAndAge(department,minSalary,age,pageable).map(employee -> new EmployeeResponseDTO(
+                employee.getName(),
+                employee.getAge(),
+                employee.getDepartment(),
+                employee.getSalary()
+        ));
+    }
+
 }

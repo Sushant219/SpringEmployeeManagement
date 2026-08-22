@@ -1,5 +1,6 @@
 package com.sushanta.employeemanagement.repository;
 
+import com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO;
 import com.sushanta.employeemanagement.entity.Employee;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,22 +34,47 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     List<Employee> findBySalary(float salary);
 
 
+    @Query("""
+            SELECT new com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO(e.department,AVG(e.salary))
+            FROM Employee e
+            GROUP BY e.department
+            """)
+    List<DepartmentAvarageSalaryDTO> findAvarageSalaryByDepartment();
+
+
+    @Query("""
+            SELECT e
+            FROM Employee e
+            WHERE e.department = :departmentA 
+            OR e.department = :departmentB
+            """)
+    List<Employee> findByDepartmentAOrDepartmentB(@Param("departmentA") String departmentA, @Param("departmentB") String departmentB);
+
+
     @Query("SELECT e FROM Employee e WHERE e.department =:department AND e.age >= :age")
     List<Employee> findByDepartmentAndAgeGreaterThanEqual(@Param("department") String department, @Param("age") int age);
 
-    List<Employee> findByNameContainingIgnoreCase(String name);
+
+    @Query("SELECT e FROM Employee e WHERE LOWER(e.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Employee> findByNameContainingIgnoreCase(@Param("name") String name);
 
 
     @Query("SELECT e FROM Employee e WHERE e.salary > :salary ")
     List<Employee> findBySalaryGreaterThan(@Param("salary") float salary);
 
-    List<Employee> findBySalaryBetween(
-            float minSalary,
-            float maxSalary
-    );
 
+    @Query("SELECT e FROM Employee e WHERE e.salary >= :minSalary AND e.salary <= :maxSalary ")
+    List<Employee> findBySalaryBetween(@Param("minSalary") float minSalary, @Param("maxSalary") float maxSalary);
+
+
+    @Query("""
+            SELECT e
+            FROM Employee e
+            WHERE e.department = :department
+            ORDER BY e.salary DESC
+            """)
     List<Employee> findByDepartmentOrderBySalaryDesc(
-            String department
+            @Param("department") String department
     );
 
 // ===========================
@@ -64,4 +90,20 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
             String department,
             Pageable pageable
     );
+
+
+    @Query("SELECT e FROM Employee e WHERE e.salary > :minSalary")
+    Page<Employee> findBySalaryGreaterThan(@Param("minSalary") float minSalary, Pageable pageable);
+
+
+    // Select Employee By Department, Salary, Age, Page And Size
+    @Query("""
+            SELECT e
+            FROM Employee e
+            WHERE e.department IS NULL OR e.department = :department
+            AND e.salary IS NULL OR e.salary > :minSalary
+            AND e.age IS NULL OR e.age = :age
+            """)
+    Page<Employee> findByDepartmentSalaryAndAge(@Param("department") String department, @Param("minSalary") float minSalary, @Param("age") int age, Pageable pageable);
+
 }

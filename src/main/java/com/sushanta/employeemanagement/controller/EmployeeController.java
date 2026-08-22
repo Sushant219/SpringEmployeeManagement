@@ -1,6 +1,7 @@
 package com.sushanta.employeemanagement.controller;
 
 
+import com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO;
 import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
 import com.sushanta.employeemanagement.service.EmployeeService;
@@ -66,6 +67,19 @@ public class EmployeeController {
             @PathVariable String department) {
 
         return ResponseEntity.ok(employeeService.findByDepartment(department));
+    }
+
+    @GetMapping("/department/avarage/salary")
+    public List<DepartmentAvarageSalaryDTO> getEmployeeDepartmentAvarageSalary() {
+        return  employeeService.getEmployeeDepartmentAvarageSalary();
+    }
+
+    @GetMapping("/department/{departmentA}/or/{departmentB}")
+    public ResponseEntity<List<EmployeeResponseDTO>> getByDepartmentAOrDepartmentB(
+            @PathVariable String departmentA,
+            @PathVariable String departmentB) {
+        List<EmployeeResponseDTO> response = employeeService.employeeFromDepartmentAOrDepartmentB(departmentA, departmentB);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/age/{age}")
@@ -154,6 +168,14 @@ public class EmployeeController {
                 employeeService.getEmployeesByPageAndSort(page, size, sort, direction));
     }
 
+    @GetMapping("/page/sort/salary")
+    public  ResponseEntity<Page<EmployeeResponseDTO>> getEmployeesBySalaryGreaterThan(
+            @RequestParam float minSalary,
+            @RequestParam(defaultValue = "0")int page,
+            @RequestParam(defaultValue = "5")int size) {
+        return ResponseEntity.ok(employeeService.getEmployeesBySalaryGreaterThan(minSalary, page, size));
+    }
+
     // ===========================
     // FILTER + PAGINATION + SORTING
     // ===========================
@@ -202,5 +224,16 @@ public class EmployeeController {
                         size,
                         sort,
                         direction));
+    }
+
+    @GetMapping("/department/salary/age")
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByDepartmentSalaryAndAge(@RequestParam String department, @RequestParam float minSalary, @RequestParam int age, @RequestParam int page, @RequestParam int size) {
+        return ResponseEntity.ok(employeeService.getEmployeeByDepartmentSalaryAndAge(
+                department,
+                minSalary,
+                age,
+                page,
+                size
+        ));
     }
 }
