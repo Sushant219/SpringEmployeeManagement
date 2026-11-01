@@ -4,6 +4,7 @@ package com.sushanta.employeemanagement.controller;
 import com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO;
 import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
+import com.sushanta.employeemanagement.entity.Department;
 import com.sushanta.employeemanagement.service.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ public class EmployeeController {
     // CRUD
     // ===========================
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<EmployeeResponseDTO> createEmployee(
             @Valid @RequestBody EmployeeRequestDTO request) {
 
@@ -35,7 +36,7 @@ public class EmployeeController {
                 .body(employeeService.createEmployee(request));
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<EmployeeResponseDTO>> getAllEmployees() {
         return ResponseEntity.ok(employeeService.getEmployee());
     }
@@ -64,7 +65,7 @@ public class EmployeeController {
 
     @GetMapping("/department/{department}")
     public ResponseEntity<List<EmployeeResponseDTO>> getByDepartment(
-            @PathVariable String department) {
+            @PathVariable Department department) {
 
         return ResponseEntity.ok(employeeService.findByDepartment(department));
     }
@@ -76,8 +77,8 @@ public class EmployeeController {
 
     @GetMapping("/department/{departmentA}/or/{departmentB}")
     public ResponseEntity<List<EmployeeResponseDTO>> getByDepartmentAOrDepartmentB(
-            @PathVariable String departmentA,
-            @PathVariable String departmentB) {
+            @PathVariable Department departmentA,
+            @PathVariable Department departmentB) {
         List<EmployeeResponseDTO> response = employeeService.employeeFromDepartmentAOrDepartmentB(departmentA, departmentB);
         return ResponseEntity.ok(response);
     }
@@ -114,7 +115,7 @@ public class EmployeeController {
 
     @GetMapping("/department/{department}/age/{age}")
     public ResponseEntity<List<EmployeeResponseDTO>> getDepartmentAndAge(
-            @PathVariable String department,
+            @PathVariable Department department,
             @PathVariable int age) {
 
         return ResponseEntity.ok(
@@ -130,7 +131,7 @@ public class EmployeeController {
 
     @GetMapping("/department/{department}/salary/desc")
     public ResponseEntity<List<EmployeeResponseDTO>> getDepartmentOrderBySalaryDesc(
-            @PathVariable String department) {
+            @PathVariable Department department) {
 
         return ResponseEntity.ok(
                 employeeService.getEmployeeByDepartmentSortBySalaryDesc(department));
@@ -227,7 +228,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/department/salary/age")
-    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByDepartmentSalaryAndAge(@RequestParam String department, @RequestParam float minSalary, @RequestParam int age, @RequestParam int page, @RequestParam int size) {
+    public ResponseEntity<Page<EmployeeResponseDTO>> getEmployeeByDepartmentSalaryAndAge(@RequestParam Department department, @RequestParam float minSalary, @RequestParam int age, @RequestParam int page, @RequestParam int size) {
         return ResponseEntity.ok(employeeService.getEmployeeByDepartmentSalaryAndAge(
                 department,
                 minSalary,
@@ -235,5 +236,13 @@ public class EmployeeController {
                 page,
                 size
         ));
+    }
+
+    // Testing
+
+    @PostMapping("/test-transaction/{idOne}/{idTwo}")
+    public String testTransaction(@PathVariable int idOne, @PathVariable int idTwo) {
+        employeeService.firstEmployee(idOne, idTwo);
+        return "Test completed";
     }
 }

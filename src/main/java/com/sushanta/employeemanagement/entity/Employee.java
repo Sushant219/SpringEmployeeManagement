@@ -1,10 +1,8 @@
 package com.sushanta.employeemanagement.entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -34,13 +32,15 @@ public class Employee {
     @Min(value = 18,message = "Age Must Be Greater Than 18")
     private int age;
 
-    @NotBlank
-    private String department;
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
     @Positive
     private float salary;
 
-    public Employee(String name, String email, int age, String department, float salary) {
+    public Employee(String name, String email, int age, Department department, float salary) {
         this.name = name;
         this.email = email;
         this.age = age;

@@ -14,6 +14,6 @@ public class EmployeeRequestDTO {
     private String name;
     private String email;
     private int age;
-    private String department;
+    private long departmentId;
     private float salary;
 }

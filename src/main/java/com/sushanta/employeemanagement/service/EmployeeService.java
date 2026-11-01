@@ -4,16 +4,21 @@ package com.sushanta.employeemanagement.service;
 import com.sushanta.employeemanagement.dto.DepartmentAvarageSalaryDTO;
 import com.sushanta.employeemanagement.dto.EmployeeRequestDTO;
 import com.sushanta.employeemanagement.dto.EmployeeResponseDTO;
+import com.sushanta.employeemanagement.entity.Department;
 import com.sushanta.employeemanagement.entity.Employee;
+import com.sushanta.employeemanagement.exception.DepartmentNotFoundException;
 import com.sushanta.employeemanagement.exception.DuplicateEmailException;
 import com.sushanta.employeemanagement.exception.EmployeeNotFoundException;
 import com.sushanta.employeemanagement.exception.InvalidDepartmentException;
+import com.sushanta.employeemanagement.repository.DepartmentRepository;
 import com.sushanta.employeemanagement.repository.EmployeeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,30 +29,26 @@ public class EmployeeService {
 
     // Dependency Creation
     EmployeeRepository repository;
+    DepartmentRepository departmentRepository;
+    private final EmployeeUpdateService employeeUpdateService;
 
-    public EmployeeService(EmployeeRepository repository) {
+    public EmployeeService(EmployeeRepository repository, DepartmentRepository departmentRepository, EmployeeUpdateService employeeUpdateService) {
         this.repository = repository;
+        this.departmentRepository = departmentRepository;
+        this.employeeUpdateService = employeeUpdateService;
     }
 
     // Add Employee
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO employeeRequestDTO) {
 
-        List<String> departments = List.of(
-                "IT",
-                "HR",
-                "Production",
-                "Finance",
-                "Marketing"
-        );
-
-        boolean validDepartment = false;
+        Department departmentId = departmentRepository.findById(employeeRequestDTO.getDepartmentId()).orElseThrow(()->new RuntimeException("Department Not Found!"));
 
         // DTO -> Entity
         Employee employee = new Employee(
                 employeeRequestDTO.getName(),
                 employeeRequestDTO.getEmail(),
                 employeeRequestDTO.getAge(),
-                employeeRequestDTO.getDepartment(),
+                departmentId,
                 employeeRequestDTO.getSalary()
         );
 
@@ -55,17 +56,7 @@ public class EmployeeService {
         if (repository.existsByEmail(employee.getEmail())) {
             throw new DuplicateEmailException("Employee with " + employee.getEmail() + " already exists.");
         }
-        // Validating The Department.
-        for (String department : departments) {
-            if (department.equals(employee.getDepartment())) {
-                validDepartment = true;
-                break;
-            }
-        }
 
-        if (!validDepartment) {
-            throw new InvalidDepartmentException("Department does not exist.");
-        }
 
         // Save The Employee After Cheacking.
         repository.save(employee);
@@ -74,8 +65,9 @@ public class EmployeeService {
         // Entity -> DTO
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
+                employee.getEmail(),
                 employee.getAge(),
-                employee.getDepartment(),
+                employee.getDepartment().getName(),
                 employee.getSalary()
         );
         return employeeResponseDTO;
@@ -92,8 +84,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             // Adding Each DTO Inside Our ArrayList.
@@ -104,7 +97,7 @@ public class EmployeeService {
     }
 
     // Get Employee By Department
-    public List<EmployeeResponseDTO> findByDepartment(String department) {
+    public List<EmployeeResponseDTO> findByDepartment(Department department) {
 
         List<Employee> employeeList = repository.findByDepartment(department);
 
@@ -113,8 +106,9 @@ public class EmployeeService {
         for (Employee employee : employeeList) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -138,8 +132,9 @@ public class EmployeeService {
 
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
+                employee.getEmail(),
                 employee.getAge(),
-                employee.getDepartment(),
+                employee.getDepartment().getName(),
                 employee.getSalary()
         );
 
@@ -163,10 +158,15 @@ public class EmployeeService {
         }
 
 
+        Department department = departmentRepository.findById(employeeRequestDTO.getDepartmentId())
+                .orElseThrow(() -> new DepartmentNotFoundException(
+                        "Department " + employeeRequestDTO.getDepartmentId() + " not found"
+                ));
+
         employee.setName(employeeRequestDTO.getName());
         employee.setEmail(employeeRequestDTO.getEmail());
         employee.setAge(employeeRequestDTO.getAge());
-        employee.setDepartment(employeeRequestDTO.getDepartment());
+        employee.setDepartment(department);
         employee.setSalary(employeeRequestDTO.getSalary());
 
 
@@ -175,8 +175,9 @@ public class EmployeeService {
 
         EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                 employee.getName(),
+                employee.getEmail(),
                 employee.getAge(),
-                employee.getDepartment(),
+                employee.getDepartment().getName(),
                 employee.getSalary()
         );
         return employeeResponseDTO;
@@ -204,8 +205,9 @@ public class EmployeeService {
             if (employee.getAge() >= age) {
                 EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                         employee.getName(),
+                        employee.getEmail(),
                         employee.getAge(),
-                        employee.getDepartment(),
+                        employee.getDepartment().getName(),
                         employee.getSalary()
                 );
                 employeeResponseDTOS.add(employeeResponseDTO);
@@ -224,8 +226,9 @@ public class EmployeeService {
             if (employee.getSalary() >= salary) {
                 EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                         employee.getName(),
+                        employee.getEmail(),
                         employee.getAge(),
-                        employee.getDepartment(),
+                        employee.getDepartment().getName(),
                         employee.getSalary()
                 );
                 employeeResponseDTOS.add(employeeResponseDTO);
@@ -236,14 +239,15 @@ public class EmployeeService {
 
 
     // Employee From DepartmentA Or DepartmentB
-    public List<EmployeeResponseDTO> employeeFromDepartmentAOrDepartmentB(String departmentA, String departmentB) {
+    public List<EmployeeResponseDTO> employeeFromDepartmentAOrDepartmentB(Department departmentA, Department departmentB) {
         List<Employee> employeeList = repository.findByDepartmentAOrDepartmentB(departmentA, departmentB);
         List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
         for (Employee employee : employeeList) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -252,7 +256,7 @@ public class EmployeeService {
     }
 
     // Employee By Department And Age
-    public List<EmployeeResponseDTO> getEmployeeByDepartmentAndAge(String department, int age) {
+    public List<EmployeeResponseDTO> getEmployeeByDepartmentAndAge(Department department, int age) {
         List<Employee> employees = repository.findByDepartmentAndAgeGreaterThanEqual(department, age);
 
         List<EmployeeResponseDTO> employeeResponseDTOS = new ArrayList<>();
@@ -260,8 +264,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -276,8 +281,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -292,8 +298,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -310,8 +317,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -320,7 +328,7 @@ public class EmployeeService {
     }
 
     // Employee Department And Salary LessThan.
-    public List<EmployeeResponseDTO> getEmployeeByDepartmentSortBySalaryDesc(String department) {
+    public List<EmployeeResponseDTO> getEmployeeByDepartmentSortBySalaryDesc(Department department) {
 
         List<Employee> employees = repository.findByDepartmentOrderBySalaryDesc(department);
 
@@ -329,8 +337,9 @@ public class EmployeeService {
         for (Employee employee : employees) {
             EmployeeResponseDTO employeeResponseDTO = new EmployeeResponseDTO(
                     employee.getName(),
+                    employee.getEmail(),
                     employee.getAge(),
-                    employee.getDepartment(),
+                    employee.getDepartment().getName(),
                     employee.getSalary()
             );
             employeeResponseDTOS.add(employeeResponseDTO);
@@ -345,8 +354,9 @@ public class EmployeeService {
 
         Page<EmployeeResponseDTO> employeeResponseDTOS = employees.map(employee -> new EmployeeResponseDTO(
                 employee.getName(),
+                employee.getEmail(),
                 employee.getAge(),
-                employee.getDepartment(),
+                employee.getDepartment().getName(),
                 employee.getSalary()
         ));
         return employeeResponseDTOS;
@@ -372,8 +382,9 @@ public class EmployeeService {
         return repository.findAll(pageable)
                 .map(employee -> new EmployeeResponseDTO(
                         employee.getName(),
+                        employee.getEmail(),
                         employee.getAge(),
-                        employee.getDepartment(),
+                        employee.getDepartment().getName(),
                         employee.getSalary()
                 ));
     }
@@ -398,8 +409,9 @@ public class EmployeeService {
         return repository.findByAge(age, pageable)
                 .map(employee -> new EmployeeResponseDTO(
                         employee.getName(),
+                        employee.getEmail(),
                         employee.getAge(),
-                        employee.getDepartment(),
+                        employee.getDepartment().getName(),
                         employee.getSalary()
                 ));
     }
@@ -424,8 +436,9 @@ public class EmployeeService {
         return repository.findByDepartment(department, pageable)
                 .map(employee -> new EmployeeResponseDTO(
                         employee.getName(),
+                        employee.getEmail(),
                         employee.getAge(),
-                        employee.getDepartment(),
+                        employee.getDepartment().getName(),
                         employee.getSalary()
                 ));
     }
@@ -436,22 +449,63 @@ public class EmployeeService {
         return repository.findBySalaryGreaterThan(minSalary, pageable1)
                 .map(employee -> new EmployeeResponseDTO(
                    employee.getName(),
+                   employee.getEmail(),
                    employee.getAge(),
-                   employee.getDepartment(),
+                   employee.getDepartment().getName(),
                    employee.getSalary()
                 ));
     }
 
     // Get Employee By Department,salary,age,page and size
-    public Page<EmployeeResponseDTO> getEmployeeByDepartmentSalaryAndAge(String department,float minSalary, int age, int page, int size) {
+    public Page<EmployeeResponseDTO> getEmployeeByDepartmentSalaryAndAge(Department department,float minSalary, int age, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         return repository.findByDepartmentSalaryAndAge(department,minSalary,age,pageable).map(employee -> new EmployeeResponseDTO(
                 employee.getName(),
+                employee.getEmail(),
                 employee.getAge(),
-                employee.getDepartment(),
+                employee.getDepartment().getName(),
                 employee.getSalary()
         ));
     }
+
+    @Transactional
+    public void testResult(int idOne, int idTwo) {
+
+        Employee employeeOne = repository.findById(idOne)
+                .orElseThrow(() -> new RuntimeException("Employee " + idOne + " Not Found"));
+
+        Employee employeeTwo = repository.findById(idTwo)
+                .orElseThrow(() -> new RuntimeException("Employee " + idTwo + " Not Found"));
+
+        // First operation: change employee one's salary
+        employeeOne.setSalary(58000.0f);
+        repository.saveAndFlush(employeeOne);
+
+       try { // Second operation: deliberately violate the UNIQUE email constraint
+           employeeTwo.setEmail(employeeOne.getEmail());
+           repository.saveAndFlush(employeeTwo);
+       } catch (Exception e){
+           System.out.println("Caught exception " + e.getMessage());
+       }
+
+       System.out.println("Test Completed");
+    }
+
+
+    //@Transactional
+    public void firstEmployee(int idOne, int idTwo){
+        Employee employeeFirst = repository.findById(idOne)
+                .orElseThrow(() -> new RuntimeException("Employee " + idOne + " Not Found"));
+
+        employeeFirst.setSalary(65000.0f);
+        repository.save(employeeFirst);
+        System.out.println("First employee updated");
+
+
+        employeeUpdateService.secondEmployee(idTwo);
+
+    }
+
 
 }
